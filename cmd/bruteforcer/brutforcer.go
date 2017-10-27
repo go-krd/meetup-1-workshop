@@ -25,5 +25,12 @@ func main() {
 }
 
 func helloHandler(w http.ResponseWriter, req *http.Request) {
+	hash := req.URL.Query().Get("hash")
+	if hash == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, "hash is not specified")
+		return
+	}
+
 	io.WriteString(w, "Hello, bruteforcer!")
 }
