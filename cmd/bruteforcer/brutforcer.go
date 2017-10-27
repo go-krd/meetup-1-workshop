@@ -6,6 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
+	"time"
+
+	"github.com/go-krd/meetup-1-workshop/pkg/brute"
 )
 
 const (
@@ -20,11 +24,16 @@ func main() {
 
 	addr := fmt.Sprintf(":%s", port)
 
-	err := http.ListenAndServe(addr, http.HandlerFunc(helloHandler))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/brute", bruteHandler)
+
+	log.Printf("Listen %s", addr)
+	err := http.ListenAndServe(addr, mux)
 	log.Fatal(err)
 }
 
-func helloHandler(w http.ResponseWriter, req *http.Request) {
+// try: curl /brute?hash=95ebc3c7b3b9f1d2c40fec14415d3cb8
+func bruteHandler(w http.ResponseWriter, req *http.Request) {
 	hash := req.URL.Query().Get("hash")
 	if hash == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -32,5 +41,15 @@ func helloHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	io.WriteString(w, "Hello, bruteforcer!")
+	before := time.Now()
+	pass, err := brute.Multi(hash, runtime.NumCPU())
+	took := time.Now().Sub(before)
+
+	w.Header().Set("X-Duration", took.String())
+
+	if err != nil {
+		io.WriteString(w, err.Error())
+	} else {
+		io.WriteString(w, pass)
+	}
 }
