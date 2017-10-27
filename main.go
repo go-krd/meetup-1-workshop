@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/go-krd/meetup-1-workshop/pkg/brute"
@@ -13,7 +14,7 @@ func main() {
 
 	before := time.Now()
 
-	pass, err := brute.Force(hash)
+	pass, err := brute.Multi(hash, runtime.NumCPU())
 	if err != nil {
 		log.Fatalf("failed to bruteforce: %s", err)
 	}
